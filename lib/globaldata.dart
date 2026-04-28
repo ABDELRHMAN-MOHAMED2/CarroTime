@@ -150,7 +150,7 @@ void add_plant(BuildContext context, String? plantImage, String? day, int min) {
         ),
         SizedBox(height: 2),
         Text(
-          "you earned ${globalCoins.value} CarroCoins.",
+          "you earned ${(40 + (10 * (min / 5))).toInt()} CarroCoins.",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         SizedBox(height: 10),
