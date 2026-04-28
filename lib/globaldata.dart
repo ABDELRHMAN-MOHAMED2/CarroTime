@@ -157,7 +157,7 @@ void add_plant(BuildContext context, String? plantImage, String? day, int min) {
         Text(""),
       ],
     ),
-    autoHide: Duration(seconds: 5),
+    // autoHide: Duration(seconds: 5),
   )..show();
 }
 

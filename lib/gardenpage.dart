@@ -160,15 +160,18 @@ class _GardenState extends State<Garden> {
                       Watch((context) {
                         // تحديد القيمة بناءً على الزرار اللي انداس عليه (sindex)
                         int displayedPlants = 0;
-                        if (sindex == 0) displayedPlants = todayPlants.value;
-                        else if (sindex == 1) displayedPlants = total_plants.value;
-                        else if (sindex == 2) displayedPlants = monthPlants.value;
+                        if (sindex == 0)
+                          displayedPlants = todayPlants.value;
+                        else if (sindex == 1)
+                          displayedPlants = total_plants.value;
+                        else if (sindex == 2)
+                          displayedPlants = monthPlants.value;
 
                         return Text(
                           "$displayedPlants",
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
-                            fontSize: 28,
+                            fontSize: 26,
                           ),
                         );
                       }),
@@ -196,23 +199,24 @@ class _GardenState extends State<Garden> {
                     children: [
                       Icon(Icons.schedule, color: pri, size: 25),
                       SizedBox(height: 15),
-                      Expanded(
-                        child: Watch((context) {
-                          // تحديد القيمة بناءً على الزرار اللي انداس عليه (sindex)
-                          int displayedTime = 0;
-                          if (sindex == 0) displayedTime = todayTime.value;
-                          else if (sindex == 1) displayedTime = totalTime.value;
-                          else if (sindex == 2) displayedTime = monthTime.value;
+                      Watch((context) {
+                        // تحديد القيمة بناءً على الزرار اللي انداس عليه (sindex)
+                        int displayedTime = 0;
+                        if (sindex == 0)
+                          displayedTime = todayTime.value;
+                        else if (sindex == 1)
+                          displayedTime = totalTime.value;
+                        else if (sindex == 2)
+                          displayedTime = monthTime.value;
 
-                          return Text(
-                            "${displayedTime ~/ 60}h${displayedTime % 60}m",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 28,
-                            ),
-                          );
-                        }),
-                      ),
+                        return Text(
+                          "200h50m",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 26,
+                          ),
+                        );
+                      }),
                       Text(
                         "TOTAL FOCUS",
                         style: TextStyle(color: Colors.grey[700]),
