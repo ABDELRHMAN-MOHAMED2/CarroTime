@@ -4,6 +4,7 @@ import 'package:CarroTime/newnavbar.dart';
 import 'package:CarroTime/Core/Colors.dart';
 import 'package:CarroTime/ShedScreen.dart';
 import 'package:CarroTime/ShopPage.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -66,7 +67,7 @@ class _HomeState extends State<Home>
         actions: [
           MaterialButton(
             child: Container(
-              width: 77,
+              width: 100,
               height: 40,
               decoration: BoxDecoration(
                 color: Color(0xffFFF1ED),
@@ -89,7 +90,40 @@ class _HomeState extends State<Home>
               ),
             ),
             onPressed: () {
-              print("buy coins");
+              AwesomeDialog(
+                context: context,
+                // dialogType: DialogType.noHeader,
+                customHeader: Image.asset("assets/coin.png"),
+                animType: AnimType.scale,
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "CarroCoin",
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      "Used in the store to buy new seeds.",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 1),
+                    Text(
+                      "You get them when you plant a new seed.",
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    SizedBox(height: 10),
+                    Text(""),
+                  ],
+                ),
+
+              )..show();
             },
           ),
         ],
