@@ -109,7 +109,7 @@ class _HomeState extends State<Home>
                     ),
                     SizedBox(height: 2),
                     Text(
-                      "Used in the store to buy new seeds.",
+                      "Used in the shop to buy new seeds.",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
