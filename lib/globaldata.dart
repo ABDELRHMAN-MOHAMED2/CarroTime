@@ -139,7 +139,7 @@ void add_plant(BuildContext context, String? plantImage, String? day, int min) {
   AwesomeDialog(
     context: context,
     // dialogType: DialogType.noHeader,
-    customHeader: Image.asset("assets/coin.png"),
+    customHeader: Image.asset("assets/CarroCoin.png"),
     animType: AnimType.scale,
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -150,7 +150,7 @@ void add_plant(BuildContext context, String? plantImage, String? day, int min) {
         ),
         SizedBox(height: 2),
         Text(
-          "you earned ${globalCoins.value} coins.",
+          "you earned ${globalCoins.value} CarroCoins.",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         SizedBox(height: 10),

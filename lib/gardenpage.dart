@@ -171,7 +171,7 @@ class _GardenState extends State<Garden> {
                           "$displayedPlants",
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
-                            fontSize: 26,
+                            fontSize: 28,
                           ),
                         );
                       }),
@@ -210,10 +210,10 @@ class _GardenState extends State<Garden> {
                           displayedTime = monthTime.value;
 
                         return Text(
-                          "200h50m",
+                          "${displayedTime ~/ 60}h${displayedTime % 60}m",
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
-                            fontSize: 26,
+                            fontSize: 24,
                           ),
                         );
                       }),

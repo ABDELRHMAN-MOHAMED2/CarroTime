@@ -85,7 +85,7 @@ class _HomeState extends State<Home>
                       ),
                     );
                   }),
-                  Image.asset("assets/coin.png", width: 25, height: 25),
+                  Image.asset("assets/CarroCoin.png", width: 22, height: 22),
                 ],
               ),
             ),
@@ -93,7 +93,9 @@ class _HomeState extends State<Home>
               AwesomeDialog(
                 context: context,
                 // dialogType: DialogType.noHeader,
-                customHeader: Image.asset("assets/coin.png"),
+                customHeader: Center(
+                  child: Image.asset("assets/CarroCoin.png"),
+                ),
                 animType: AnimType.scale,
                 body: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -109,20 +111,19 @@ class _HomeState extends State<Home>
                     Text(
                       "Used in the store to buy new seeds.",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     SizedBox(height: 1),
                     Text(
                       "You get them when you plant a new seed.",
-                      style: TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 10),
                     ),
                     SizedBox(height: 10),
                     Text(""),
                   ],
                 ),
-
               )..show();
             },
           ),
