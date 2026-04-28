@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:signals/signals_flutter.dart';
@@ -10,7 +11,7 @@ final Box statsBox = Hive.box('Stat');
 final globalCoins = signal(0);
 final currentStreak = signal(0);
 
-final todayPlants = signal(0); 
+final todayPlants = signal(0);
 final todayTime = signal(0);
 
 final total_plants = signal(0);
@@ -20,7 +21,13 @@ final monthPlants = signal(0);
 final monthTime = signal(0);
 
 Map<String, List<String>> Harvest = {
-  "SUN": [], "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [], "SAT": []
+  "SUN": [],
+  "MON": [],
+  "TUE": [],
+  "WED": [],
+  "THU": [],
+  "FRI": [],
+  "SAT": [],
 };
 
 void initAppLogic() {
@@ -39,7 +46,9 @@ void initAppLogic() {
   var savedHarvest = harvestBox.get('weeklyHarvest');
   if (savedHarvest != null) {
     Harvest = Map<String, List<String>>.from(
-      (savedHarvest as Map).map((key, value) => MapEntry(key.toString(), List<String>.from(value)))
+      (savedHarvest as Map).map(
+        (key, value) => MapEntry(key.toString(), List<String>.from(value)),
+      ),
     );
   }
 
@@ -50,29 +59,42 @@ void checkAndResetData() {
   DateTime now = DateTime.now();
   DateTime lastOpened = userDataBox.get('lastOpenedDate', defaultValue: now);
 
-  if (now.day != lastOpened.day || now.month != lastOpened.month || now.year != lastOpened.year) {
+  if (now.day != lastOpened.day ||
+      now.month != lastOpened.month ||
+      now.year != lastOpened.year) {
     todayPlants.value = 0;
     todayTime.value = 0;
     userDataBox.put('todayPlants', 0);
     userDataBox.put('todayTime', 0);
   }
 
-  int daysToSubtract = (now.weekday == 7) ? 0 : now.weekday; 
-  DateTime startOfCurrentWeek = DateTime(now.year, now.month, now.day - daysToSubtract);
+  int daysToSubtract = (now.weekday == 7) ? 0 : now.weekday;
+  DateTime startOfCurrentWeek = DateTime(
+    now.year,
+    now.month,
+    now.day - daysToSubtract,
+  );
 
   if (lastOpened.isBefore(startOfCurrentWeek)) {
     print("أسبوع جديد! جاري حفظ الإحصائيات وتصفير الحديقة...");
-    
-    String lastWeekKey = "week_of_${lastOpened.year}-${lastOpened.month}-${lastOpened.day}";
+
+    String lastWeekKey =
+        "week_of_${lastOpened.year}-${lastOpened.month}-${lastOpened.day}";
     statsBox.put(lastWeekKey, {
       "time": totalTime.value,
-      "plants": total_plants.value
+      "plants": total_plants.value,
     });
 
     totalTime.value = 0;
     total_plants.value = 0;
     Harvest = {
-      "SUN": [], "MON": [], "TUE": [], "WED": [], "THU": [], "FRI": [], "SAT": []
+      "SUN": [],
+      "MON": [],
+      "TUE": [],
+      "WED": [],
+      "THU": [],
+      "FRI": [],
+      "SAT": [],
     };
 
     userDataBox.put('totalTime', 0);
@@ -90,22 +112,20 @@ void checkAndResetData() {
   userDataBox.put('lastOpenedDate', now);
 }
 
-
-
 void add_plant(BuildContext context, String? plantImage, String? day, int min) {
   Harvest[day!]!.add(plantImage!);
-  globalCoins.value += (40 + (10 * (min / 5))).toInt(); 
+  globalCoins.value += (40 + (10 * (min / 5))).toInt();
 
   todayPlants.value++;
   todayTime.value += min;
 
   total_plants.value++;
-  totalTime.value += min; 
+  totalTime.value += min;
 
   monthPlants.value++;
   monthTime.value += min;
-  
-  updateStreak(); 
+
+  updateStreak();
 
   userDataBox.put('coins', globalCoins.value);
   userDataBox.put('todayPlants', todayPlants.value);
@@ -116,15 +136,29 @@ void add_plant(BuildContext context, String? plantImage, String? day, int min) {
   userDataBox.put('monthTime', monthTime.value);
   harvestBox.put('weeklyHarvest', Harvest);
 
-  
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      duration: Duration(seconds: 2),
-      content: Text("Great job! You planted a ${plantImage.split(".png")[0]}", style: TextStyle(color: Colors.black)), 
-      backgroundColor: AppBarrColor,
-      behavior: SnackBarBehavior.floating, 
+  AwesomeDialog(
+    context: context,
+    // dialogType: DialogType.noHeader,
+    customHeader: Image.asset("assets/coin.png"),
+    animType: AnimType.scale,
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          "Great Job!",
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 2),
+        Text(
+          "you earned ${globalCoins.value} coins.",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        SizedBox(height: 10),
+        Text(""),
+      ],
     ),
-  );
+    autoHide: Duration(seconds: 5),
+  )..show();
 }
 
 String getCurrentDay() {
@@ -135,7 +169,7 @@ String getCurrentDay() {
 void updateStreak() {
   DateTime now = DateTime.now();
   DateTime today = DateTime(now.year, now.month, now.day);
-  
+
   DateTime? lastPlantDate = userDataBox.get('lastPlantDate');
 
   if (lastPlantDate == null) {
