@@ -41,8 +41,14 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
       isRunning = true;
       maxSeconds = timeInMinutes * 60; // تحويل الدقائق لثواني
       currentSeconds = maxSeconds;
-      targetEndTime = DateTime.now().add(Duration(seconds: maxSeconds));
+      // targetEndTime = DateTime.now().add(Duration(seconds: maxSeconds));
     });
+
+    DateTime targetEndTime = DateTime.now().add(Duration(minutes: timeInMinutes));
+    userDataBox.put('targetEndTime', targetEndTime);
+    userDataBox.put('isTimerRunning', true); // عشان نعرف إن في تايمر شغال
+    userDataBox.put('currentPlant', chosen); // نحفظ الزرعة اللي اختارها
+    userDataBox.put('currentPlantTime', timeInMinutes);
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (targetEndTime != null) {
@@ -69,6 +75,9 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
       isRunning = false;
       targetEndTime = null;
     });
+
+    userDataBox.delete('targetEndTime');
+    userDataBox.put('isTimerRunning', false);
 
     if (completed) {
       add_plant(context, chosen, Today, timeInMinutes);
@@ -97,6 +106,56 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
     return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
   }
 
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // هل كان في تايمر شغال قبل ما التطبيق يتقفل؟
+    bool wasRunning = userDataBox.get('isTimerRunning', defaultValue: false);
+    
+    if (wasRunning) {
+      DateTime? targetEndTime = userDataBox.get('targetEndTime');
+      
+      if (targetEndTime != null) {
+        DateTime now = DateTime.now();
+        
+        if (now.isBefore(targetEndTime)) {
+          // التايمر لسه مخلصش! نحسب الثواني الباقية ونشغله تاني
+          int remainingSeconds = targetEndTime.difference(now).inSeconds;
+          
+          setState(() {
+            chosen = userDataBox.get('currentPlant', defaultValue: "carrot.png");
+            timeInMinutes = userDataBox.get('currentPlantTime', defaultValue: 10);
+            isRunning = true;
+            maxSeconds = timeInMinutes * 60;
+            currentSeconds = remainingSeconds; // نحدث الثواني الحالية
+          });
+          
+          // نشغل العداد من جديد بالثواني الباقية
+          _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (currentSeconds > 0) {
+              setState(() {
+                currentSeconds--;
+              });
+            } else {
+              stopTimer(completed: true);
+            }
+          });
+          
+        } else {
+          // الوقت عدّى والمستخدم كان قافل التطبيق! (نعتبره خلص بنجاح)
+          setState(() {
+            chosen = userDataBox.get('currentPlant', defaultValue: "carrot.png");
+            timeInMinutes = userDataBox.get('currentPlantTime', defaultValue: 10);
+          });
+          // نوقفه ونديله الجايزة
+          stopTimer(completed: true); 
+        }
+      }
+    }
+  }
+  
   @override
   void dispose() {
     _timer?.cancel(); // عشان نقفل العداد لو المستخدم خرج من الشاشة
