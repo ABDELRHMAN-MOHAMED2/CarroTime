@@ -6,6 +6,7 @@ import 'package:signals/signals_flutter.dart';
 import 'globaldata.dart';
 import 'package:flutter_auto_size_text/flutter_auto_size_text.dart';
 
+// green to 0-5 orange 6-49 , red 50-75 , blue 76 - 99 , purple 100 - infinty
 class Garden extends StatefulWidget {
   Garden({super.key});
 
@@ -80,51 +81,67 @@ class _GardenState extends State<Garden> {
 
         SizedBox(height: 32),
         Center(
-          child: Container(
-            width: 330,
-            height: 236,
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [Color.fromARGB(255, 230, 116, 85), pri],
+          // غلفنا الكونتينر كله بـ Watch عشان لو الاستريك اتغير، اللون يتغير فوراً
+          child: Watch((context) {
+            int streak = currentStreak.value;
+            List<Color> gradientColors;
+
+            // تحديد الألوان بناءً على قيمة الاستريك
+            if (streak <= 4) {
+              gradientColors = [Color(0xFF94C973), Color(0xFF4E8033)]; // أخضر
+            } else if (streak <= 49) {
+              gradientColors = [
+                Color.fromARGB(255, 230, 116, 85),
+                Color(0xffA43700),
+              ]; // برتقالي
+            } else if (streak <= 75) {
+              gradientColors = [Color(0xFF7BAAF7), Color(0xFF2B5C9C)]; // أزرق
+            } else {
+              gradientColors = [Color(0xFFC084FC), Color(0xFF6B21A8)]; // بنفسجي
+            }
+
+            return Container(
+              width: 330,
+              height: 236,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(colors: gradientColors),
+                borderRadius: BorderRadius.circular(20),
               ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FaIcon(FontAwesomeIcons.fire, color: Colors.white, size: 36),
-                SizedBox(height: 16),
-                Text(
-                  "CURRENT STREAK",
-                  style: TextStyle(
-                    color: Colors.grey[350],
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FaIcon(FontAwesomeIcons.fire, color: Colors.white, size: 36),
+                  SizedBox(height: 16),
+                  Text(
+                    "CURRENT STREAK",
+                    style: TextStyle(
+                      color: Colors.grey[350],
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Watch(
-                  (context) => Text(
-                    "$currentStreak days",
+                  Text(
+                    "$streak days",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                       fontSize: 45,
                     ),
                   ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  "Keep GOING!",
-                  style: TextStyle(
-                    color: Colors.grey[350],
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                  SizedBox(height: 5),
+                  Text(
+                    "Keep GOING!",
+                    style: TextStyle(
+                      color: Colors.grey[350],
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          }),
         ),
         SizedBox(height: 32),
         Container(
