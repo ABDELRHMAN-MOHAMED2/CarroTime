@@ -43,6 +43,7 @@ dependencies:
   hive_flutter: ^1.1.0
   circle_nav_bar: ^2.2.0
   awesome_dialog: ^3.3.0
+  flutter_auto_size_text: ^5.0.0
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
 

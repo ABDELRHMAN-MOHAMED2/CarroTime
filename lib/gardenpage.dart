@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:signals/signals_flutter.dart';
 import 'globaldata.dart';
+import 'package:flutter_auto_size_text/flutter_auto_size_text.dart';
 
 class Garden extends StatefulWidget {
   Garden({super.key});
@@ -209,12 +210,13 @@ class _GardenState extends State<Garden> {
                         else if (sindex == 2)
                           displayedTime = monthTime.value;
 
-                        return Text(
+                        return AutoSizeText(
                           "${displayedTime ~/ 60}h${displayedTime % 60}m",
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 24,
                           ),
+                          maxFontSize: 24,
                         );
                       }),
                       Text(

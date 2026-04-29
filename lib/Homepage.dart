@@ -6,6 +6,7 @@ import 'package:CarroTime/ShedScreen.dart';
 import 'package:CarroTime/ShopPage.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_auto_size_text/flutter_auto_size_text.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -77,12 +78,13 @@ class _HomeState extends State<Home>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Watch((context) {
-                    return Text(
+                    return AutoSizeText(
                       "${globalCoins.value} ",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
+                      maxFontSize: 18,
                     );
                   }),
                   Image.asset("assets/CarroCoin.png", width: 22, height: 22),
