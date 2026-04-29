@@ -44,7 +44,9 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
       // targetEndTime = DateTime.now().add(Duration(seconds: maxSeconds));
     });
 
-    DateTime targetEndTime = DateTime.now().add(Duration(minutes: timeInMinutes));
+    DateTime targetEndTime = DateTime.now().add(
+      Duration(minutes: timeInMinutes),
+    );
     userDataBox.put('targetEndTime', targetEndTime);
     userDataBox.put('isTimerRunning', true); // عشان نعرف إن في تايمر شغال
     userDataBox.put('currentPlant', chosen); // نحفظ الزرعة اللي اختارها
@@ -106,56 +108,75 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
     return "${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}";
   }
 
-
   @override
   void initState() {
     super.initState();
-    
-    // هل كان في تايمر شغال قبل ما التطبيق يتقفل؟
-    bool wasRunning = userDataBox.get('isTimerRunning', defaultValue: false);
-    
-    if (wasRunning) {
-      DateTime? targetEndTime = userDataBox.get('targetEndTime');
-      
-      if (targetEndTime != null) {
-        DateTime now = DateTime.now();
-        
-        if (now.isBefore(targetEndTime)) {
-          // التايمر لسه مخلصش! نحسب الثواني الباقية ونشغله تاني
-          int remainingSeconds = targetEndTime.difference(now).inSeconds;
-          
-          setState(() {
-            chosen = userDataBox.get('currentPlant', defaultValue: "carrot.png");
-            timeInMinutes = userDataBox.get('currentPlantTime', defaultValue: 10);
-            isRunning = true;
-            maxSeconds = timeInMinutes * 60;
-            currentSeconds = remainingSeconds; // نحدث الثواني الحالية
-          });
-          
-          // نشغل العداد من جديد بالثواني الباقية
-          _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-            if (currentSeconds > 0) {
-              setState(() {
-                currentSeconds--;
-              });
-            } else {
-              stopTimer(completed: true);
-            }
-          });
-          
-        } else {
-          // الوقت عدّى والمستخدم كان قافل التطبيق! (نعتبره خلص بنجاح)
-          setState(() {
-            chosen = userDataBox.get('currentPlant', defaultValue: "carrot.png");
-            timeInMinutes = userDataBox.get('currentPlantTime', defaultValue: 10);
-          });
-          // نوقفه ونديله الجايزة
-          stopTimer(completed: true); 
+
+    // الأداة دي بتخلي الكود يستنى لحد ما الشاشة تترسم الأول عشان الـ SnackBar ميضربش إيرور
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      bool wasRunning = userDataBox.get('isTimerRunning', defaultValue: false);
+
+      if (wasRunning) {
+        DateTime? savedTargetTime = userDataBox.get('targetEndTime');
+
+        if (savedTargetTime != null) {
+          DateTime now = DateTime.now();
+
+          if (now.isBefore(savedTargetTime)) {
+            // التايمر لسه مخلصش!
+            int remainingSeconds = savedTargetTime.difference(now).inSeconds;
+
+            setState(() {
+              chosen = userDataBox.get(
+                'currentPlant',
+                defaultValue: "carrot.png",
+              );
+              timeInMinutes = userDataBox.get(
+                'currentPlantTime',
+                defaultValue: 10,
+              );
+              isRunning = true;
+              maxSeconds = timeInMinutes * 60;
+              currentSeconds = remainingSeconds;
+              // بنحدث المتغير اللي بره عشان التايمر يشتغل عليه
+              targetEndTime = savedTargetTime;
+            });
+
+            // نشغل العداد من جديد بالثواني الباقية
+            _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+              if (targetEndTime != null) {
+                int remSeconds = targetEndTime!
+                    .difference(DateTime.now())
+                    .inSeconds;
+                if (remSeconds > 0) {
+                  setState(() {
+                    currentSeconds = remSeconds;
+                  });
+                } else {
+                  stopTimer(completed: true);
+                }
+              }
+            });
+          } else {
+            // الوقت عدّى والمستخدم كان قافل التطبيق!
+            setState(() {
+              chosen = userDataBox.get(
+                'currentPlant',
+                defaultValue: "carrot.png",
+              );
+              timeInMinutes = userDataBox.get(
+                'currentPlantTime',
+                defaultValue: 10,
+              );
+            });
+            // نوقفه ونديله الجايزة (دلوقتي مش هيضرب إيرور لأن الشاشة خلاص اترسمت)
+            stopTimer(completed: true);
+          }
         }
       }
-    }
+    });
   }
-  
+
   @override
   void dispose() {
     _timer?.cancel(); // عشان نقفل العداد لو المستخدم خرج من الشاشة
