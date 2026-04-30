@@ -98,6 +98,31 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  String getDynamicPlantImage() {
+    if (!isRunning) {
+      return "assets/$chosen"; // بنعرض الزرعة كاملة كـ (Preview)
+    }
+
+    // 2. نحسب نسبة الوقت اللي عدى (من 0.0 لـ 1.0)
+    // مثلاً لو التايمر 10 دقايق وعدى دقيقتين ونص، النسبة هتكون 0.25
+    double progress = (maxSeconds - currentSeconds) / maxSeconds;
+
+    // 3. الشروط بتاعتنا
+    if (progress < 0.25) {
+      // أول ربع من الوقت (الربع الأول)
+      return "assets/soil.png";
+    } else if (progress >= 0.25 && currentSeconds > 0) {
+      // باقي الوقت والتايمر لسه شغال (مرحلة النمو)
+      // 💡 تريكة: لو عندك gif لكل زرعة، ممكن تعملها كده:
+      // return "assets/${chosen!.split('.').first}_grow.gif";
+      // بس حالياً هنستخدم ملف واحد زي ما طلبت
+      return "assets/grow.gif";
+    } else {
+      // التايمر خلص (100%)
+      return "assets/$chosen";
+    }
+  }
+
   // دالة عشان تظبط شكل الوقت (MM:SS)
   String get displayTime {
     if (!isRunning) {
@@ -218,7 +243,15 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                         color: bg,
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      child: Image.asset("assets/$chosen"),
+                      child: ClipOval(
+                        child: Image.asset(
+                          getDynamicPlantImage(),
+                          width:
+                              70, // يفضل تثبت العرض والطول عشان الـ gif ميبوظش حجم الدايرة
+                          height: 70,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                     SizedBox(height: 10),
                     Row(
