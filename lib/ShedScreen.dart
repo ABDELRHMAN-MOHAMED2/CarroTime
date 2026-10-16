@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:CarroTime/Local_notification.dart';
+import 'package:CarroTime/Models/plant_repository.dart';
+import 'package:CarroTime/Models/plantModel.dart';
 import 'package:flutter/material.dart';
 import 'Core/Colors.dart';
-import 'Bottomnavbar.dart';
-import 'globaldata.dart';
+import 'Models/globaldata.dart';
 
 class SHED extends StatefulWidget {
   const SHED({super.key});
@@ -16,67 +18,61 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
 
   int selectedIndex = 0;
 
-  // متغيرات إعداد الوقت
   int timeInMinutes = 10;
   String Today = getCurrentDay();
-  String? chosen = "carrot.png"; // خليت الديفولت الجزر عشان يليق مع الاسم
-  List plants = [
-    {"name": "Carrot", "image": "carrot.png"},
-    {"name": "Flower", "image": "tulipp.png"},
-    {"name": "Watermellon", "image": "watermellon.png"},
-    {"name": "Tomato", "image": "tomato.png"},
-    {"name": "Strawbarry", "image": "strawparry.png"},
-  ];
 
-  // ----------------------------------------
-  // متغيرات المؤقت (Timer Variables)
-  // ----------------------------------------
+  /// The currently selected plant – starts with Carrot (always unlocked).
+  PlantModel chosen = kAllPlants.first;
+
   Timer? _timer;
   bool isRunning = false;
   int currentSeconds = 0;
   int maxSeconds = 1;
   DateTime? targetEndTime;
-  void startTimer() {
+
+  void startTimer({required String name}) {
     setState(() {
       isRunning = true;
-      maxSeconds = timeInMinutes * 60; // تحويل الدقائق لثواني
+      maxSeconds = timeInMinutes * 60;
       currentSeconds = maxSeconds;
-      // targetEndTime = DateTime.now().add(Duration(seconds: maxSeconds));
     });
 
     DateTime targetEndTime = DateTime.now().add(
       Duration(minutes: timeInMinutes),
     );
+
+    LocalNotifcationService.showNotification(
+      name: name,
+      targetEndTime: targetEndTime,
+    );
+
     userDataBox.put('targetEndTime', targetEndTime);
-    userDataBox.put('isTimerRunning', true); // عشان نعرف إن في تايمر شغال
-    userDataBox.put('currentPlant', chosen); // نحفظ الزرعة اللي اختارها
+    userDataBox.put('isTimerRunning', true);
+    // Save the plant ID (String) – no Hive adapter needed.
+    userDataBox.put('currentPlantId', chosen.id);
     userDataBox.put('currentPlantTime', timeInMinutes);
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (targetEndTime != null) {
-        // بنطرح الوقت الحالي من وقت الانتهاء عشان نجيب الثواني المتبقية الحقيقية
-        int remainingSeconds = targetEndTime!
-            .difference(DateTime.now())
-            .inSeconds;
+      int remainingSeconds = targetEndTime.difference(DateTime.now()).inSeconds;
 
-        if (remainingSeconds > 0) {
-          setState(() {
-            currentSeconds = remainingSeconds;
-          });
-        } else {
-          // لو الوقت خلص
-          stopTimer(completed: true);
-        }
+      if (remainingSeconds > 0) {
+        setState(() {
+          currentSeconds = remainingSeconds;
+        });
+      } else {
+        stopTimer(completed: true);
       }
     });
   }
 
-  void stopTimer({bool completed = false}) {
+  void stopTimer({bool completed = false}) async {
     _timer?.cancel();
     setState(() {
       isRunning = false;
       targetEndTime = null;
     });
+    await Future.delayed(Duration(seconds: 5));
+    LocalNotifcationService.Cancel(id: 1);
 
     userDataBox.delete('targetEndTime');
     userDataBox.put('isTimerRunning', false);
@@ -88,7 +84,7 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
         SnackBar(
           duration: Duration(seconds: 2),
           content: Text(
-            "You cancelled a ${chosen!.split(".png")[0]}",
+            "You cancelled a ${chosen.name}",
             style: TextStyle(color: Colors.black),
           ),
           backgroundColor: AppBarrColor,
@@ -100,30 +96,20 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
 
   String getDynamicPlantImage() {
     if (!isRunning) {
-      return "assets/$chosen"; // بنعرض الزرعة كاملة كـ (Preview)
+      return chosen.imgPath;
     }
 
-    // 2. نحسب نسبة الوقت اللي عدى (من 0.0 لـ 1.0)
-    // مثلاً لو التايمر 10 دقايق وعدى دقيقتين ونص، النسبة هتكون 0.25
     double progress = (maxSeconds - currentSeconds) / maxSeconds;
 
-    // 3. الشروط بتاعتنا
     if (progress < 0.25) {
-      // أول ربع من الوقت (الربع الأول)
       return "assets/soil.png";
     } else if (progress >= 0.25 && currentSeconds > 0) {
-      // باقي الوقت والتايمر لسه شغال (مرحلة النمو)
-      // 💡 تريكة: لو عندك gif لكل زرعة، ممكن تعملها كده:
-      // return "assets/${chosen!.split('.').first}_grow.gif";
-      // بس حالياً هنستخدم ملف واحد زي ما طلبت
       return "assets/grow.gif";
     } else {
-      // التايمر خلص (100%)
-      return "assets/$chosen";
+      return chosen.imgPath;
     }
   }
 
-  // دالة عشان تظبط شكل الوقت (MM:SS)
   String get displayTime {
     if (!isRunning) {
       return "${timeInMinutes.toString().padLeft(2, '0')}:00";
@@ -137,7 +123,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
   void initState() {
     super.initState();
 
-    // الأداة دي بتخلي الكود يستنى لحد ما الشاشة تترسم الأول عشان الـ SnackBar ميضربش إيرور
     WidgetsBinding.instance.addPostFrameCallback((_) {
       bool wasRunning = userDataBox.get('isTimerRunning', defaultValue: false);
 
@@ -147,15 +132,18 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
         if (savedTargetTime != null) {
           DateTime now = DateTime.now();
 
+          // Restore the chosen plant from the saved ID.
+          final String savedId = userDataBox.get(
+            'currentPlantId',
+            defaultValue: kAllPlants.first.id,
+          );
+          final PlantModel restoredPlant = getPlantByIdOrDefault(savedId);
+
           if (now.isBefore(savedTargetTime)) {
-            // التايمر لسه مخلصش!
             int remainingSeconds = savedTargetTime.difference(now).inSeconds;
 
             setState(() {
-              chosen = userDataBox.get(
-                'currentPlant',
-                defaultValue: "carrot.png",
-              );
+              chosen = restoredPlant;
               timeInMinutes = userDataBox.get(
                 'currentPlantTime',
                 defaultValue: 10,
@@ -163,11 +151,9 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
               isRunning = true;
               maxSeconds = timeInMinutes * 60;
               currentSeconds = remainingSeconds;
-              // بنحدث المتغير اللي بره عشان التايمر يشتغل عليه
               targetEndTime = savedTargetTime;
             });
 
-            // نشغل العداد من جديد بالثواني الباقية
             _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
               if (targetEndTime != null) {
                 int remSeconds = targetEndTime!
@@ -183,18 +169,14 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
               }
             });
           } else {
-            // الوقت عدّى والمستخدم كان قافل التطبيق!
             setState(() {
-              chosen = userDataBox.get(
-                'currentPlant',
-                defaultValue: "carrot.png",
-              );
+              chosen = restoredPlant;
               timeInMinutes = userDataBox.get(
                 'currentPlantTime',
                 defaultValue: 10,
               );
             });
-            // نوقفه ونديله الجايزة (دلوقتي مش هيضرب إيرور لأن الشاشة خلاص اترسمت)
+
             stopTimer(completed: true);
           }
         }
@@ -204,7 +186,7 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
 
   @override
   void dispose() {
-    _timer?.cancel(); // عشان نقفل العداد لو المستخدم خرج من الشاشة
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -230,7 +212,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                   color: AppBarrColor,
                   borderRadius: BorderRadius.circular(48),
                   border: Border.all(color: bg, width: 7),
-                  // شلنا الـ border من هنا لأن الـ Indicator هو اللي هيرسمه
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -246,8 +227,7 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                       child: ClipOval(
                         child: Image.asset(
                           getDynamicPlantImage(),
-                          width:
-                              70, // يفضل تثبت العرض والطول عشان الـ gif ميبوظش حجم الدايرة
+                          width: 70,
                           height: 70,
                           fit: BoxFit.cover,
                         ),
@@ -257,7 +237,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // إخفاء زرار (-) أثناء تشغيل المؤقت
                         if (!isRunning)
                           Container(
                             decoration: BoxDecoration(
@@ -281,7 +260,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                           ),
                         SizedBox(width: 5),
 
-                        // عرض الوقت المتغير
                         Text(
                           displayTime,
                           style: TextStyle(
@@ -292,7 +270,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                         ),
                         SizedBox(width: 5),
 
-                        // إخفاء زرار (+) أثناء تشغيل المؤقت
                         if (!isRunning)
                           Container(
                             decoration: BoxDecoration(
@@ -345,7 +322,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
           ),
           SizedBox(height: 13),
 
-          // عشان المستخدم ميغيرش البذرة وهو مركز
           Opacity(
             opacity: isRunning ? 0.5 : 1.0,
             child: IgnorePointer(
@@ -355,43 +331,81 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
                 child: ListView.builder(
                   physics: const BouncingScrollPhysics(),
                   scrollDirection: Axis.horizontal,
-                  itemCount: plants.length,
+                  itemCount: kAllPlants.length,
                   itemBuilder: (context, index) {
+                    final PlantModel plant = kAllPlants[index];
+                    final bool isSelected = chosen.id == plant.id;
+                    final bool locked = !plant.isUnlocked;
+
                     return Container(
                       margin: EdgeInsets.all(6),
                       padding: EdgeInsets.all(1),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            chosen = plants[index]["image"];
-                          });
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(right: 7),
-                          width: 132,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: AppBarrColor,
-                            // تمييز البذرة المختارة
-                            border: chosen == plants[index]["image"]
-                                ? Border.all(color: Color(0xffA43700), width: 2)
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                "assets/${plants[index]["image"]}",
-                                width: 35,
-                                height: 35,
+                      child: locked
+                          ? Container()
+                          : Opacity(
+                              opacity: locked ? 0.45 : 1.0,
+                              child: InkWell(
+                                onTap: locked
+                                    ? () {
+                                        // Show a hint that the plant is locked.
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            duration: Duration(seconds: 2),
+                                            content: Text(
+                                              "${plant.name} is locked. Coming soon!",
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            backgroundColor: AppBarrColor,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    : () {
+                                        setState(() {
+                                          chosen = plant;
+                                        });
+                                      },
+                                child: Container(
+                                  margin: EdgeInsets.only(right: 2),
+                                  width: 140,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(30),
+                                    color: AppBarrColor,
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: Color(0xffA43700),
+                                            width: 2,
+                                          )
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        plant.imgPath,
+                                        width: 35,
+                                        height: 35,
+                                      ),
+                                      SizedBox(width: 5),
+                                      Text(plant.name),
+                                      if (locked) ...[
+                                        SizedBox(width: 4),
+                                        Icon(
+                                          Icons.lock,
+                                          size: 13,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
-                              SizedBox(width: 5),
-                              Text("${plants[index]["name"]}"),
-                            ],
-                          ),
-                        ),
-                      ),
+                            ),
                     );
                   },
                 ),
@@ -401,13 +415,12 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
 
           SizedBox(height: 40),
 
-          // زرار التشغيل والإلغاء
           InkWell(
             onTap: () {
               if (isRunning) {
-                stopTimer(); // لو شغال، وقفه (إلغاء)
+                stopTimer();
               } else {
-                startTimer(); // لو واقف، شغله
+                startTimer(name: chosen.name);
               }
             },
             child: Container(
@@ -416,7 +429,6 @@ class _SHEDState extends State<SHED> with AutomaticKeepAliveClientMixin {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(100),
-                // تغيير لون الزرار للرمادي لو المؤقت شغال
                 color: isRunning ? Colors.grey[700] : pri,
                 boxShadow: isRunning
                     ? []

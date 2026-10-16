@@ -44,6 +44,10 @@ dependencies:
   circle_nav_bar: ^2.2.0
   awesome_dialog: ^3.3.0
   flutter_auto_size_text: ^5.0.0
+  flutter_native_splash: ^2.4.7
+  timezone: ^0.11.0
+  flutter_local_notifications: ^22.0.1
+  flutter_timezone: ^5.1.0
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
 

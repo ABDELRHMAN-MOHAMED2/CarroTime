@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'package:CarroTime/Bottomnavbar.dart';
 import 'package:CarroTime/newnavbar.dart';
 import 'package:CarroTime/Core/Colors.dart';
 import 'package:CarroTime/ShedScreen.dart';
@@ -7,12 +5,8 @@ import 'package:CarroTime/ShopPage.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auto_size_text/flutter_auto_size_text.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:CarroTime/gardenpage.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'globaldata.dart';
+import 'Models/globaldata.dart';
 import 'package:signals/signals_flutter.dart';
 
 class Home extends StatefulWidget {
@@ -33,6 +27,7 @@ class _HomeState extends State<Home>
   void initState() {
     super.initState();
     initAppLogic();
+    checkStreakOnStartup();
     WidgetsBinding.instance.addObserver(this);
     pageController = PageController(initialPage: _currentIndex);
   }
@@ -47,6 +42,7 @@ class _HomeState extends State<Home>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       checkAndResetData();
+      checkStreakOnStartup();
     }
   }
 
@@ -66,7 +62,9 @@ class _HomeState extends State<Home>
           ),
         ),
         actions: [
-          MaterialButton(
+          
+          SizedBox(width: 8),
+          InkWell(
             child: Container(
               width: 100,
               height: 40,
@@ -91,13 +89,11 @@ class _HomeState extends State<Home>
                 ],
               ),
             ),
-            onPressed: () {
+            onTap: () {
               AwesomeDialog(
                 context: context,
                 // dialogType: DialogType.noHeader,
-                customHeader: Center(
-                  child: Image.asset("assets/CarroCoin.png"),
-                ),
+                customHeader: Center(child: Image.asset("assets/coin.png")),
                 animType: AnimType.scale,
                 body: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,

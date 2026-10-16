@@ -44,3 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 assets/make_the_video_shorter_and_don.mp4
+# Widget Preview related
+.widget_preview/
